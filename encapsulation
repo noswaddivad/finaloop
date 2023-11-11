@@ -1,1 +1,283 @@
-1
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
+// Superclass for encapsulation
+class Account {
+    private String username;
+    private String password;
+
+    public Account(String username, String password) {
+        setUsername(username);
+        setPassword(password);
+    }
+
+    // Getters and setters
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    // Abstract method for withdrawal
+    public abstract void withdraw(int amount) throws InsufficientFundsException;
+}
+
+// Subclass inheriting from the superclass
+class BankAccount extends Account {
+    private String accountNumber;
+    private int balance;
+
+    public BankAccount(String username, String password) {
+        super(username, password);
+        accountNumber = generateAccountNumber();
+        balance = 500; // Initial deposit
+    }
+
+    public String getAccountNumber() {
+        return accountNumber;
+    }
+
+    public int getBalance() {
+        return balance;
+    }
+
+    // Generate a new account number
+    private String generateAccountNumber() {
+        int currentAccountNumber = Integer.parseInt(accountNumber);
+        currentAccountNumber++;
+        return String.format("%010d", currentAccountNumber);
+    }
+
+    // Override the withdrawal method
+    @Override
+    public void withdraw(int amount) throws InsufficientFundsException {
+        if (amount > balance) {
+            throw new InsufficientFundsException("Insufficient funds. Current balance: " + balance);
+        } else {
+            // Simulate a withdrawal process
+            startWithdrawalTimer();
+            balance -= amount;
+            stopWithdrawalTimer();
+        }
+    }
+
+    // Simulate a withdrawal timer
+    private void startWithdrawalTimer() {
+        Timer timer = new Timer(60000, new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                JOptionPane.showMessageDialog(null, "Withdrawal time limit reached. Transaction canceled.");
+            }
+        });
+        timer.setRepeats(false);
+        timer.start();
+    }
+
+    private void stopWithdrawalTimer() {
+        // Implement any logic needed to stop the timer
+        // For simplicity, we don't need to do anything here
+    }
+}
+
+// Custom exception class for insufficient funds
+class InsufficientFundsException extends Exception {
+    public InsufficientFundsException(String message) {
+        super(message);
+    }
+}
+
+public class BankAccountApp extends JFrame {
+    private BankAccount bankAccount; // Using the BankAccount subclass
+
+    private JTextField usernameField, passwordField, pinField, firstNameField, middleNameField, lastNameField,
+            birthdateField, genderField, addressField, fatherNameField, motherNameField, contactNoField, depositField;
+
+    public BankAccountApp() {
+        setTitle("Bank Account Registration");
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setSize(400, 500);
+        setLayout(new GridLayout(16, 2));
+
+        add(new JLabel("Username:"));
+        usernameField = new JTextField();
+        add(usernameField);
+
+        add(new JLabel("Password:"));
+        passwordField = new JPasswordField();
+        add(passwordField);
+
+        add(new JLabel("Pin code:"));
+        pinField = new JPasswordField();
+        add(pinField);
+
+        add(new JLabel("First Name:"));
+        firstNameField = new JTextField();
+        add(firstNameField);
+
+        add(new JLabel("Middle Name:"));
+        middleNameField = new JTextField();
+        add(middleNameField);
+
+        add(new JLabel("Last Name:"));
+        lastNameField = new JTextField();
+        add(lastNameField);
+
+        add(new JLabel("Birthdate:"));
+        birthdateField = new JTextField();
+        add(birthdateField);
+
+        add(new JLabel("Gender:"));
+        genderField = new JTextField();
+        add(genderField);
+
+        add(new JLabel("Address:"));
+        addressField = new JTextField();
+        add(addressField);
+
+        add(new JLabel("Father Name:"));
+        fatherNameField = new JTextField();
+        add(fatherNameField);
+
+        add(new JLabel("Mother Name:"));
+        motherNameField = new JTextField();
+        add(motherNameField);
+
+        add(new JLabel("Contact No:"));
+        contactNoField = new JTextField();
+        add(contactNoField);
+
+        add(new JLabel("Initial Deposit:"));
+        depositField = new JTextField("500");
+        depositField.setEditable(false);
+        add(depositField);
+
+        JButton registerButton = new JButton("Register");
+        registerButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                registerAccount();
+            }
+        });
+        add(registerButton);
+
+        JButton depositButton = new JButton("Deposit");
+        depositButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                deposit();
+            }
+        });
+        add(depositButton);
+
+        JButton withdrawButton = new JButton("Withdraw");
+        withdrawButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                withdraw();
+            }
+        });
+        add(withdrawButton);
+
+        JButton balanceInquiryButton = new JButton("Balance Inquiry");
+        balanceInquiryButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                balanceInquiry();
+            }
+        });
+        add(balanceInquiryButton);
+
+        // Initialize account number with default value
+        accountNumber = "2023100000";
+
+        setVisible(true);
+    }
+
+    private void registerAccount() {
+        String username = usernameField.getText();
+        String password = passwordField.getText();
+        String pin = pinField.getText();
+        String firstName = firstNameField.getText();
+        String middleName = middleNameField.getText();
+        String lastName = lastNameField.getText();
+        String birthdate = birthdateField.getText();
+        String gender = genderField.getText();
+        String address = addressField.getText();
+        String fatherName = fatherNameField.getText();
+        String motherName = motherNameField.getText();
+        String contactNo = contactNoField.getText();
+        String initialDeposit = depositField.getText();
+
+        bankAccount = new BankAccount(username, password);
+
+        saveToTextFile();
+
+        JOptionPane.showMessageDialog(this, "Account Registered Successfully!\nAccount Number: " + bankAccount.getAccountNumber());
+    }
+
+    private void deposit() {
+        // You need to implement the deposit logic here
+        // For simplicity, let's just show a message for now
+        JOptionPane.showMessageDialog(this, "Deposit feature is not implemented yet.");
+    }
+
+    private void withdraw() {
+        // You need to implement the withdraw logic here
+        // For simplicity, let's just show a message for now
+        JOptionPane.showMessageDialog(this, "Withdraw feature is not implemented yet.");
+    }
+
+    private void balanceInquiry() {
+        // You need to implement the balance inquiry logic here
+        // For simplicity, let's just show a message for now
+        JOptionPane.showMessageDialog(this, "Balance Inquiry feature is not implemented yet.");
+    }
+
+    private void saveToTextFile() {
+        String filename = "NewAccount.txt";
+
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(filename, true))) {
+            writer.write("Account Number: " + accountNumber + "\n");
+            writer.write("Username: " + bankAccount.getUsername() + "\n");
+            writer.write("Password: " + bankAccount.getPassword() + "\n");
+            writer.write("Pin code: " + pinField.getText() + "\n");
+            writer.write("First Name: " + firstNameField.getText() + "\n");
+            writer.write("Middle Name: " + middleNameField.getText() + "\n");
+            writer.write("Last Name: " + lastNameField.getText() + "\n");
+            writer.write("Birthdate: " + birthdateField.getText() + "\n");
+            writer.write("Gender: " + genderField.getText() + "\n");
+            writer.write("Address: " + addressField.getText() + "\n");
+            writer.write("Father Name: " + fatherNameField.getText() + "\n");
+            writer.write("Mother Name: " + motherNameField.getText() + "\n");
+            writer.write("Contact No: " + contactNoField.getText() + "\n");
+            writer.write("Initial Deposit: " + depositField.getText() + "\n");
+            writer.write("\n");
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(this, "Error saving account information to file.", "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(() -> new BankAccountApp());
+    }
+}
